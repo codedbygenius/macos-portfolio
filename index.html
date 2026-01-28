@@ -1,0 +1,2613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="port-title">Portfolio - macOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Draggable.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            transition: background 0.3s ease;
+        }
+
+        body.dark-mode {
+            background: #1a1a1a;
+        }
+
+        .desktop {
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            transition: filter 0.3s ease;
+        }
+
+        .desktop::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+        }
+
+        /* Menu Bar */
+        .menu-bar {
+            background: rgba(236, 236, 236, 0.2);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            color: white;
+            font-size: 13px;
+            position: relative;
+            z-index: 1001;
+            transition: background 0.3s ease;
+        }
+
+        body.dark-mode .menu-bar {
+            background: rgba(48, 48, 48, 0.3);
+        }
+
+        .menu-bar-left {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .menu-bar-right {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .menu-item {
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .menu-item:hover {
+            opacity: 0.7;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .theme-toggle-circle {
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        body.dark-mode .theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        body.dark-mode .theme-toggle-circle {
+            transform: translateX(20px);
+        }
+
+        .apple-logo {
+            font-size: 18px;
+            cursor: default;
+        }
+
+        /* Window Styles */
+        .window {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: none;
+            min-width: 500px;
+            width: 600px;
+            max-height: 70vh;
+            z-index: 100;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark-mode .window {
+            background: rgba(40, 40, 40, 0.95);
+            color: #e5e5e5;
+        }
+
+        .window.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .window.finder-window {
+            width: 800px;
+            max-height: 80vh;
+        }
+
+        .window.safari-window {
+            width: 900px;
+            max-height: 85vh;
+        }
+
+        .window-header {
+            background: linear-gradient(to bottom, rgba(246, 246, 246, 0.95), rgba(236, 236, 236, 0.95));
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: move;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .window-header {
+            background: linear-gradient(to bottom, rgba(50, 50, 50, 0.95), rgba(40, 40, 40, 0.95));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .traffic-lights {
+            display: flex;
+            gap: 8px;
+        }
+
+        .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: filter 0.2s;
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .traffic-light:hover {
+            filter: brightness(0.8);
+        }
+
+        .traffic-light.close {
+            background: #ff5f57;
+        }
+
+        .traffic-light.minimize {
+            background: #ffbd2e;
+        }
+
+        .traffic-light.maximize {
+            background: #28c840;
+        }
+
+        .window-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+            text-align: center;
+            margin-right: 60px;
+        }
+
+        body.dark-mode .window-title {
+            color: #e5e5e5;
+        }
+
+        .download-icon-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(0, 0, 0, 0.05);
+            margin-left: auto;
+        }
+
+        .download-icon-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        body.dark-mode .download-icon-btn {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .download-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .window-content {
+            padding: 24px;
+            overflow-y: auto;
+            color: #333;
+            flex: 1;
+            background: rgba(255, 255, 255, 0.98);
+        }
+
+        body.dark-mode .window-content {
+            background: rgba(40, 40, 40, 0.98);
+            color: #e5e5e5;
+        }
+
+        .window-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .window-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .window-content::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        body.dark-mode .window-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Terminal Window Styles */
+        .terminal-window .window-content {
+            background: #fafafa !important;
+            color: #29c380;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+            line-height: 1.6;
+            font-weight: 600;
+            padding: 16px;
+        }
+
+        body.dark-mode .terminal-window .window-content {
+            background: #1e1e1e !important;
+        }
+
+
+        .terminal-content {
+            white-space: pre-wrap;
+        }
+
+        .terminal-prompt {
+            color: #1b1b1b;
+            font-weight: 700;
+        }
+
+        .terminal-command {
+            color: #1b1b1b;
+            font-weight: 600 !important;
+        }
+
+        .terminal-output {
+            color: #29c380;
+            margin-left: 0;
+        }
+
+        .terminal-success {
+            color: #1b1b1b;
+            font-weight: 600;
+        }
+
+        .terminal-info {
+            color: #1b1b1b;
+        }
+
+        .terminal-path {
+            color: #29c380;
+            font-weight: 600 !important;
+        }
+
+        .skill-bar {
+            display: inline-block;
+            color: #29c380;
+        }
+
+        .terminal-separator {
+            color: #444;
+            margin: 8px 0;
+            font-weight: 500;
+        }
+
+        .terminal-blink {
+            animation: blink 1s infinite;
+        }
+
+        body.dark-mode .terminal-prompt {
+            color: #fafafa;
+        }
+
+        body.dark-mode .terminal-command {
+            color: #fafafa;
+        }
+
+        body.dark-mode .terminal-success {
+            color: #fafafa;
+        }
+
+        body.dark-mode .terminal-info {
+            color: #fafafa;
+        }
+
+        @keyframes blink {
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* Finder Window Styles */
+        .finder-content {
+            display: flex;
+            height: 100%;
+            padding: 0;
+        }
+
+        .finder-sidebar {
+            width: 200px;
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 12px 0;
+        }
+
+        body.dark-mode .finder-sidebar {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .finder-sidebar-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .finder-sidebar-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .finder-sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .finder-sidebar-item.active {
+            background: rgba(0, 122, 255, 0.15);
+            color: #007aff;
+        }
+
+        .finder-main {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* macOS Reminders-style Lists */
+        .reminders-container {
+            display: flex;
+            height: 100%;
+            background: rgba(250, 250, 250, 0.5);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        body.dark-mode .reminders-container {
+            background: rgba(30, 30, 30, 0.5);
+        }
+
+        .reminders-sidebar {
+            width: 220px;
+            background: rgba(240, 240, 240, 0.8);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 16px 12px;
+        }
+
+        body.dark-mode .reminders-sidebar {
+            background: rgba(35, 35, 35, 0.8);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .reminders-list-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .reminders-list-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .reminders-list-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .reminders-list-item.active {
+            background: rgba(0, 122, 255, 0.15);
+            color: #007aff;
+        }
+
+        .reminders-list-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            padding: 12px;
+        }
+
+        .reminders-main {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .reminders-header {
+            margin-bottom: 24px;
+        }
+
+        .reminders-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        body.dark-mode .reminders-title {
+            color: #e5e5e5;
+        }
+
+        .reminders-count {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        body.dark-mode .reminders-count {
+            color: #9ca3af;
+        }
+
+        .reminder-group {
+            margin-bottom: 32px;
+        }
+
+        .reminder-group-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        body.dark-mode .reminder-group-title {
+            color: #9ca3af;
+        }
+
+        .reminder-item {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            cursor: pointer;
+        }
+
+        body.dark-mode .reminder-item {
+            background: rgba(50, 50, 50, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .reminder-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        body.dark-mode .reminder-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .reminder-item-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .reminder-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #d1d5db;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .reminder-item-content {
+            flex: 1;
+        }
+
+        .reminder-item-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        body.dark-mode .reminder-item-title {
+            color: #e5e5e5;
+        }
+
+        .reminder-item-subtitle {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        body.dark-mode .reminder-item-subtitle {
+            color: #9ca3af;
+        }
+
+        .reminder-item-description {
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        body.dark-mode .reminder-item-description {
+            color: #d1d5db;
+        }
+
+        .reminder-item-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 122, 255, 0.1);
+            color: #007aff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .reminder-item-image {
+            margin-top: 12px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .reminder-item-image img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+        }
+
+        /* Desktop Icons/Folders */
+        .desktop-icons {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            display: grid;
+            grid-auto-flow: column;
+            grid-template-rows: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 55px;
+            z-index: 50;
+            height: calc(100vh - 200px);
+            width: auto;
+        }
+
+        .desktop-folder {
+            width: 80px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .desktop-folder:hover {
+            transform: scale(1.05);
+        }
+
+        .desktop-folder-icon {
+            font-size: 64px;
+            margin-bottom: 4px;
+        }
+
+        .desktop-folder-name {
+            font-size: 13px;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            word-wrap: break-word;
+            background-color: transparent;
+            border-radius: 12px;
+        }
+
+        .desktop-folder-icon:hover {
+            filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .desktop-folder:hover .desktop-folder-name {
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            background-color: #39b1e9;
+            border-radius: 12px;
+            padding: 2px;
+        }
+
+        /* Folder Contents Window */
+        .folder-contents {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 16px;
+        }
+
+        .folder-item {
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .folder-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+            transform: scale(1.05);
+        }
+
+        body.dark-mode .folder-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .folder-item-icon {
+            font-size: 48px;
+            margin-bottom: 4px;
+        }
+
+        .folder-item-name {
+            font-size: 12px;
+            word-wrap: break-word;
+        }
+
+        /* Dock Styles */
+        .dock {
+            position: fixed;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            padding: 8px 12px;
+            border-radius: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            z-index: 1002;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        body.dark-mode .dock {
+            background: rgba(50, 50, 50, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .dock-item {
+            width: 64px;
+            height: 64px;
+            background: transparent;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            font-size: 32px;
+        }
+
+        .dock-item:hover {
+            transform: translateY(-10px) scale(1.3);
+        }
+
+        .dock-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .dock-item:hover .dock-tooltip {
+            opacity: 1;
+        }
+
+        /* Safari Window Styles */
+        .safari-toolbar {
+            background: rgba(240, 240, 240, 0.95);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 8px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        body.dark-mode .safari-toolbar {
+            background: rgba(30, 30, 30, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .safari-url-bar {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        body.dark-mode .safari-url-bar {
+            background: rgba(60, 60, 60, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #999;
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .blog-card {
+            background: rgba(250, 250, 250, 0.95);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .blog-card {
+            background: rgba(50, 50, 50, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .blog-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .blog-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+
+        .blog-content {
+            padding: 16px;
+        }
+
+        .blog-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        body.dark-mode .blog-title {
+            color: #e5e5e5;
+        }
+
+        .blog-description {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        body.dark-mode .blog-description {
+            color: #9ca3af;
+        }
+
+        /* Content Styles */
+        .profile-section {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .profile-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #e5e7eb;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .profile-image {
+            border: 4px solid #4b5563;
+        }
+
+        .profile-info h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        body.dark-mode .profile-info h1 {
+            color: #e5e5e5;
+        }
+
+        .profile-info p {
+            font-size: 16px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        body.dark-mode .profile-info p {
+            color: #9ca3af;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .skill-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .contact-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .contact-link {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: transparent;
+            border-radius: 16px;
+            text-decoration: none;
+            color: #1f2937;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+
+        body.dark-mode .contact-link {
+            background: transparent;
+            color: #e5e5e5;
+        }
+
+        .contact-link:hover {
+            background: #f3f4f6;
+            transform: translateY(-4px);
+        }
+
+        body.dark-mode .contact-link:hover {
+            background: #4b5563;
+        }
+
+        .contact-link-icon {
+            font-size: 24px;
+            text-align: center;
+        }
+
+        /* Transforming the gallery window into macOS style */
+        #project-image-window {
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            overflow: hidden;
+        }
+
+        body.dark-mode #project-image-window {
+            background: rgba(40, 40, 40, 0.95);
+        }
+
+        #project-image-window .window-header {
+            background: linear-gradient(to bottom, rgba(246, 246, 246, 0.95), rgba(236, 236, 236, 0.95));
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        body.dark-mode #project-image-window .window-header {
+            background: linear-gradient(to bottom, rgba(50, 50, 50, 0.95), rgba(40, 40, 40, 0.95));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #project-image-window .window-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        #project-image-window img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .window.finder-window {
+                width: 90vw;
+                max-width: 700px;
+            }
+
+            .window.safari-window {
+                width: 90vw;
+                max-width: 800px;
+            }
+
+            .desktop-icons {
+                grid-template-columns: repeat(auto-fill, 90px);
+                gap: 16px;
+                left: 15px;
+            }
+
+            .reminders-sidebar {
+                width: 180px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .menu-bar {
+                height: 36px;
+                font-size: 11px;
+                padding: 0 12px;
+            }
+
+            .menu-bar-left,
+            .menu-bar-right {
+                gap: 10px;
+            }
+
+            .theme-toggle {
+                width: 35px;
+                height: 18px;
+            }
+
+            .theme-toggle-circle {
+                width: 14px;
+                height: 14px;
+            }
+
+            body.dark-mode .theme-toggle-circle {
+                transform: translateX(17px);
+            }
+
+            .window {
+                min-width: 95vw !important;
+                max-width: 95vw !important;
+                width: 95vw !important;
+                max-height: 75vh;
+                left: 2.5vw !important;
+                top: 50px !important;
+            }
+
+            .window.finder-window {
+                width: 95vw !important;
+            }
+
+            .window.safari-window {
+                width: 95vw !important;
+            }
+
+            .window-header {
+                padding: 10px 12px;
+            }
+
+            .window-title {
+                font-size: 12px;
+                margin-right: 30px;
+            }
+
+            .window-content {
+                padding: 16px;
+            }
+
+            .finder-sidebar {
+                width: 150px;
+                font-size: 12px;
+            }
+
+            .finder-main {
+                padding: 16px;
+            }
+
+            .folder-contents {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                gap: 12px;
+            }
+
+            .folder-item-icon {
+                font-size: 40px;
+            }
+
+            .folder-item-name {
+                font-size: 11px;
+            }
+
+            .desktop-icons {
+                top: 45px;
+                left: 10px;
+                grid-template-columns: repeat(auto-fill, 75px);
+                gap: 12px;
+            }
+
+            .desktop-folder {
+                width: 70px;
+            }
+
+            .desktop-folder-icon {
+                font-size: 48px;
+            }
+
+            .desktop-folder-name {
+                font-size: 11px;
+            }
+
+            .dock {
+                bottom: 6px;
+                gap: 8px;
+                padding: 6px 10px;
+                border-radius: 20px;
+            }
+
+            .dock-item {
+                width: 50px;
+                height: 50px;
+                font-size: 26px;
+            }
+
+            .dock-item:hover {
+                transform: translateY(-8px) scale(1.2);
+            }
+
+            .dock-tooltip {
+                font-size: 11px;
+                padding: 4px 8px;
+            }
+
+            .profile-section {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-image {
+                width: 100px;
+                height: 100px;
+            }
+
+            .profile-info h1 {
+                font-size: 24px;
+            }
+
+            .profile-info p {
+                font-size: 14px;
+            }
+
+            .blog-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .terminal-window .window-content {
+                font-size: 11px;
+                padding: 12px;
+            }
+
+            .safari-toolbar {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+
+            .safari-url-bar {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+
+            .download-icon-btn {
+                width: 24px;
+                height: 24px;
+            }
+
+            .reminders-container {
+                flex-direction: column;
+            }
+
+            .reminders-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+                padding: 12px;
+            }
+
+            body.dark-mode .reminders-sidebar {
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .reminders-main {
+                padding: 16px;
+            }
+
+            .reminders-title {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .window {
+                min-width: 98vw !important;
+                max-width: 98vw !important;
+                width: 98vw !important;
+                left: 1vw !important;
+            }
+
+            .dock {
+                gap: 6px;
+                padding: 5px 8px;
+            }
+
+            .dock-item {
+                width: 45px;
+                height: 45px;
+                font-size: 22px;
+            }
+
+            .finder-sidebar {
+                width: 120px;
+            }
+
+            .folder-contents {
+                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            .menu-bar {
+                height: 30px;
+            }
+
+            .window {
+                max-height: 85vh;
+                top: 30px !important;
+            }
+
+            .dock {
+                bottom: 4px;
+                padding: 4px 8px;
+            }
+
+            .dock-item {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .desktop-icons {
+                top: 35px;
+            }
+        }
+
+        /* Greeting Styles */
+        #desktop-greeting {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            /* font-weight:; */
+            color: white;
+            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            opacity: 0;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playwrite+NO:wght@100..400&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="desktop" id="desktop">
+        <!-- Menu Bar -->
+        <div class="menu-bar">
+            <div class="menu-bar-left">
+                <div class="apple-logo">
+                    <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764302375/assets/ejuqiwckqtezgrmjzqdd.svg"
+                        alt="Apple Logo" style="width: 16px; height: 17px;">
+                </div>
+                <div class="menu-item" id="portfolio-name" style="font-weight: 550; font-size: 16px;"
+                    onclick="openWindow('portfolio-window')">Portfolio</div>
+                <div class="menu-item fullScreen-toggle text-base font-medium hidden md:block" id="fullScreen"
+                    onclick="toggleFullscreen()">⛶ Fullscreen</div>
+            </div>
+            <div class="menu-bar-right">
+                <div class="theme-toggle" onclick="toggleTheme()">
+                    <div class="theme-toggle-circle"></div>
+                </div>
+                <div class="menu-item">
+                    <i data-lucide="wifi" style="width: 18px; height: 18px;" stroke-width="2"></i>
+                </div>
+                <div class="menu-item">
+                    <i data-lucide="battery" style="width: 20px; height: 20px;" stroke-width="2" fill="white"></i>
+                </div>
+                <div class="menu-item text-[15px] font-medium" id="datetime"></div>
+            </div>
+        </div>
+
+        <!-- Desktop Project Folders -->
+        <div class="desktop-icons" id="desktop-icons"></div>
+
+        <!-- Windows -->
+        <!-- Portfolio Finder Window -->
+        <div class="window finder-window" id="portfolio-window" style="left: 10%; top: 8%;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('portfolio-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title">Portfolio</div>
+                <div class="window-toolbar flex flex-row items-center gap-4 ">
+                    <div>
+                        <i data-lucide="search" style="width: 16px; height: 16px;" stroke-width="2"></i>
+                    </div>
+                    <div>
+                        <input type="text" id="finder-search-input" placeholder="Search"
+                            style="padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(0, 0, 0, 0.277); font-size: 13px;"
+                            oninput="filterFinderContent()">
+                    </div>
+                </div>
+            </div>
+            <div class="window-content finder-content">
+                <div class="finder-sidebar">
+                    <div class="sidebar-section">
+                        <div class="finder-sidebar-item active" onclick="showFinderSection('about')">
+                            <i data-lucide="user" style="width: 16px; height: 16px;" stroke-width="2"></i>
+                            <span>About Me</span>
+                        </div>
+                        <div class="finder-sidebar-item" onclick="showFinderSection('projects')">
+                            <i data-lucide="folder" style="width: 16px; height: 16px;" stroke-width="2"></i>
+                            <span>Projects</span>
+                        </div>
+                        <div class="finder-sidebar-item" onclick="showFinderSection('resume')">
+                            <i data-lucide="file-text" style="width: 16px; height: 16px;" stroke-width="2"></i>
+                            <span>Resume</span>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <div class="ml-[15px] mt-3 text-xs font-medium text-gray-400">
+                            Others
+                        </div>
+                        <div class="finder-sidebar-item" onclick="showFinderSection('gallery')">
+                            <i data-lucide="image" style="width: 16px; height: 16px;" stroke-width="2"></i>
+                            <span>Gallery</span>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <div class="finder-sidebar-item" onclick="showFinderSection('apps')">
+                            <i data-lucide="grid-2x2" style="width: 16px; height: 16px;" stroke-width="2"></i>
+                            <span>Applications</span>
+                        </div>
+                        <div class="finder-sidebar-item" onclick="showFinderSection('trash')">
+                            <i data-lucide="trash-2" style="width: 16px; height: 16px;" stroke-width="2"></i>
+                            <span>Trash</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="finder-main" id="finder-main-content"></div>
+            </div>
+        </div>
+
+        <!-- Resume Window -->
+        <div class="window" id="resume-window" style="left: 15%; top: 10%; width: 700px;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('resume-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title">Resume</div>
+                <div class="download-icon-btn" onclick="downloadResume()" title="Download PDF">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </div>
+            </div>
+            <div class="window-content" style="padding: 0;">
+                <iframe id="resume-iframe" style="width: 100%; height: 60vh; border: none;"></iframe>
+            </div>
+        </div>
+
+        <!-- About Text Window -->
+        <div class="window" id="about-text-window" style="left: 20%; top: 15%;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('about-text-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title">About.txt</div>
+            </div>
+            <div class="window-content">
+                <pre id="about-text-content"
+                    style="white-space: pre-wrap; font-family: 'Courier New', monospace; line-height: 1.6;"></pre>
+            </div>
+        </div>
+
+        <!-- Project Folder Window -->
+        <div class="window" id="project-folder-window" style="left: 18%; top: 12%;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('project-folder-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title" id="project-folder-title">Project</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-contents" id="project-folder-contents"></div>
+            </div>
+        </div>
+
+        <!-- Project Image Window -->
+        <div class="window" id="project-image-window" style="left: 22%; top: 14%;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('project-image-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title">Project Image</div>
+            </div>
+            <div class="window-content" style="display: flex; justify-content: center; align-items: center;">
+                <img id="project-image-display" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+            </div>
+        </div>
+
+        <!-- Project README Window -->
+        <div class="window" id="project-readme-window" style="left: 25%; top: 16%;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('project-readme-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title">README.txt</div>
+            </div>
+            <div class="window-content">
+                <pre id="project-readme-content"
+                    style="white-space: pre-wrap; font-family: 'Courier New', monospace; line-height: 1.6;"></pre>
+            </div>
+        </div>
+
+        <!-- Experience Window (Reminders Style) -->
+        <div class="window" id="experience-window" style="left: 15%; top: 12%; width: 750px;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('experience-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title">Work Experience</div>
+            </div>
+            <div class="window-content" style="padding: 0;">
+                <div class="reminders-container" id="experience-content"></div>
+            </div>
+        </div>
+
+        <!-- Education Window (Reminders Style) -->
+        <div class="window" id="education-window" style="left: 18%; top: 13%; width: 700px;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('education-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title">Education</div>
+            </div>
+            <div class="window-content" style="padding: 0;">
+                <div class="reminders-container" id="education-content"></div>
+            </div>
+        </div>
+
+        <!-- Achievements Window (Reminders Style) -->
+        <div class="window" id="achievements-window" style="left: 20%; top: 14%; width: 700px;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('achievements-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title">Achievements</div>
+            </div>
+            <div class="window-content" style="padding: 0;">
+                <div class="reminders-container" id="achievements-content"></div>
+            </div>
+        </div>
+
+        <!-- Skills Terminal Window -->
+        <div class="window terminal-window" id="skills-window" style="left: 25%; top: 16%;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('skills-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title">Terminal — skills</div>
+            </div>
+            <div class="window-content terminal-content" id="skills-content"></div>
+        </div>
+
+        <!-- Contact Window -->
+        <div class="window" id="contact-window" style="left: 30%; top: 18%;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('contact-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title">Contact</div>
+            </div>
+            <div class="window-content">
+                <div class="contact-links" id="contact-content"></div>
+            </div>
+        </div>
+
+        <!-- Safari/Blog Window -->
+        <div class="window safari-window" id="blog-window" style="left: 12%; top: 10%;">
+            <div class="window-header">
+                <div class="traffic-lights">
+                    <div class="traffic-light close" onclick="closeWindow('blog-window')"></div>
+                    <div class="traffic-light minimize"></div>
+                    <div class="traffic-light maximize"></div>
+                </div>
+                <div class="window-title">Safari - Blogs & Articles</div>
+            </div>
+            <div class="safari-toolbar">
+                <span style="font-size: 16px;">◀ ▶</span>
+                <div class="safari-url-bar flex flex-row items-center gap-2"><i data-lucide="newsPaper"
+                        style="width: 20px;"></i> blogs.portfolio.com</div>
+                <span style="font-size: 16px;">⟳</span>
+            </div>
+            <div class="window-content">
+                <div class="blog-grid" id="blog-content"></div>
+            </div>
+        </div>
+
+        <!-- Dock -->
+        <div class="dock" id="dock"></div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/SplitText.min.js"></script>
+
+
+    <script>
+
+        let userData = {"username":"Genius","profession":"Full-Stack Developer & Aspiring AI App and Automation Builder","aboutText":"I’m a full-stack developer and AI app & automation builder focused on turning ideas into working software.\n\nI use tools like Google Gemini, web technologies, and modern automation workflows to build apps, websites, and intelligent systems that solve real problems. I enjoy combining creativity with engineering — whether that’s designing clean interfaces, connecting APIs, or automating repetitive tasks with AI.\n\nThis portfolio is designed like an operating system because that’s how I think: projects, tools, and experiments all working together. I’m constantly learning, building, and refining my skills with the goal of becoming a world-class software engineer and product creator.\n","profileImage":"https://avatars.githubusercontent.com/u/209003768?v=4","resumeURL":"","backgroundImage":"https://i.pinimg.com/1200x/81/ec/2f/81ec2fd4aafe2a10d968a4021572cc62.jpg","contactEmail":"geniusmaud01@hotmail.com","github":"https://github.com/codedbygenius","linkedin":"https://www.linkedin.com/in/genius-chakurira-461a45347/","twitter":"","experience1Company":"Self / Personal Projects","experience1Role":"Full-Stack & AI App Developer","experience1Duration":"Jan 2025 – Present","experience1Description":"Built AI apps and automation scripts using Ruby on Rails, JavaScript, and APIs.\n\nDesigned and deployed web projects with full-stack functionality.\n\nApplied Google Gemini tools to integrate AI features into apps.\n\nManaged project lifecycle from concept to deployment","experience2Company":"Bionic Aesthetics (Motion Graphics Brand)","experience2Role":"Digital Creator","experience2Duration":"Sep 2024 – Present","experience2Description":"Created motion graphics for content production\nBuilt effects, and scripts to speed up video creation.\nExperimented with AI tools to enhance graphics and animations","experience3Company":"Freelance","experience3Role":"Web Developer\n","experience3Duration":"Mar 2025 – Present","experience3Description":"Delivered small web projects for clients.\n\nImplemented scripts and bots to simplify workflows.\n\nLearned GitHub-based project management and deployment practices","experience4Company":"","experience4Role":"","experience4Duration":"","experience4Description":"","experience5Company":"","experience5Role":"","experience5Duration":"","experience5Description":"","experience6Company":"","experience6Role":"","experience6Duration":"","experience6Description":"","experience7Company":"","experience7Role":"","experience7Duration":"","experience7Description":"","experience8Company":"","experience8Role":"","experience8Duration":"","experience8Description":"","experience9Company":"","experience9Role":"","experience9Duration":"","experience9Description":"","experience10Company":"","experience10Role":"","experience10Duration":"","experience10Description":"","education1Institution":"Sunridge Circle High School","education1Degree":"High School Diploma / Grade 12","education1Duration":"Aug 2022 – Dec 2025","education1Grades":"","education2Institution":"Le Wagon Cape Town","education2Degree":"Diploma in Web Development","education2Duration":"18 Jan – 21 Mar 2025","education2Grades":"Full-Stack Web Development, Front-End & Back-End Technologies","education3Institution":"Self-Learning / Personal Projects","education3Degree":"ull-Stack Development & AI Apps","education3Duration":"2024 – Present","education3Grades":"N/A (project-based learning)","education4Institution":"","education4Degree":"","education4Duration":"","education4Grades":"","education5Institution":"","education5Degree":"","education5Duration":"","education5Grades":"","achievement1Title":"Le Wagon Cape Town Diploma","achievement1Date":"Mar 2025","achievement1Description":"Graduated from a full-stack web development bootcamp, building real-world web apps with front-end and back-end technologies.","achievement1Image":"https://avatars.githubusercontent.com/u/5470001?s=280&v=4","achievement2Title":"Feelter","achievement2Date":"Dec 2025","achievement2Description":"eveloped a full-stack web application using Ruby on Rails that delivers personalized content based on user-selected moods. Managed both front-end and back-end implementation to ensure a seamless user experience","achievement2Image":"https://private-user-images.githubusercontent.com/209003768/530962672-7948bcb9-b15a-46ba-9bad-1a4d1556ad25.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3Njk2MzkwMDYsIm5iZiI6MTc2OTYzODcwNiwicGF0aCI6Ii8yMDkwMDM3NjgvNTMwOTYyNjcyLTc5NDhiY2I5LWIxNWEtNDZiYS05YmFkLTFhNGQxNTU2YWQyNS5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYwMTI4JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MDEyOFQyMjE4MjZaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT03MWI3NDcyNDlhM2ZmMzRhMWViMWFiZTg1YmYxNDllYWI3MmQ4M2ZmYzBkOTQ4ODgzY2I4MzM2MjYwNDE2N2JjJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.aQ0HFcmrOXOGfAv9wBZ2YsK8VrANxqzdbXVj39khAUQ","achievement3Title":"macOS-Style Portfolio Launch","achievement3Date":"Jan 2026","achievement3Description":"Built and deployed a fully interactive macOS-style portfolio with Tailwind CSS, GSAP animations, and GitHub Pages","achievement3Image":"https://preview.redd.it/recreated-macos-as-a-working-portfolio-interface-auto-v0-x8gd8yrm984g1.png?width=1080&crop=smart&auto=webp&s=17683b00f4b8b357a10e447f7e9cd0d6be3f26e5","achievement4Title":"Digital Marketing & SEO Certification","achievement4Date":"2025","achievement4Description":"Certified by HubSpot Academy in digital marketing fundamentals and SEO principles. Focused on building responsive landing pages and content strategies designed to improve website performance and user engagement","achievement4Image":"https://media.licdn.com/dms/image/v2/D4D2DAQFVzvJKFP4oOA/profile-treasury-image-shrink_800_800/B4DZdfTwv0HAAg-/0/1749650708442?e=1770246000&v=beta&t=gZbfxF4wPn3iG_LOQ1ENX9Uv7DV4M9V_CdlHxxkFF2c","achievement5Title":"National Senior Certificate (Matric)","achievement5Date":"2024","achievement5Description":"Successfully completed secondary education, providing the academic foundation required to pursue advanced certifications in web development and digital marketing in early 2025","achievement5Image":"https://thumbs.dreamstime.com/b/graduation-cap-class-black-white-graduate-logo-282635690.jpg?w=768","achievement6Title":"","achievement6Date":"","achievement6Description":"","achievement6Image":"","achievement7Title":"","achievement7Date":"","achievement7Description":"","achievement7Image":"","achievement8Title":"","achievement8Date":"","achievement8Description":"","achievement8Image":"","achievement9Title":"","achievement9Date":"","achievement9Description":"","achievement9Image":"","achievement10Title":"","achievement10Date":"","achievement10Description":"","achievement10Image":"","skill1Title":"JavaScript","skill2Title":"Google Gemini / AI Tools","skill3Title":"Ruby on Rails","skill4Title":"Web App Deployment","skill5Title":"Prompt Engineering","skill6Title":"Problem Solving & Algorithmic Thinking","skill7Title":"Project Management (GitHub Projects / Trello)","skill8Title":"HTML & CSS","skill9Title":"Git & GitHub","skill10Title":"API Integration","skill11Title":"","skill12Title":"","skill13Title":"","skill14Title":"","skill15Title":"","skill16Title":"","skill17Title":"","skill18Title":"","skill19Title":"","skill20Title":"","project1Title":"macOS-Style Portfolio","project1Description":"Interactive portfolio using Tailwind CSS, GSAP animations, and GitHub Pages.","project1Image":"https://preview.redd.it/recreated-macos-as-a-working-portfolio-interface-auto-v0-x8gd8yrm984g1.png?width=1080&crop=smart&auto=webp&s=17683b00f4b8b357a10e447f7e9cd0d6be3f26e5","project1Link":"yourportfolio.github.io","project1Github":"github.com/codedbygenius/macOS-portfolio","project2Title":"Feelter","project2Description":"Built a full-stack web application delivering content based on user mood. Implemented both front-end and back-end features using Ruby on Rails.","project2Image":"https://private-user-images.githubusercontent.com/209003768/530962672-7948bcb9-b15a-46ba-9bad-1a4d1556ad25.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3Njk2MzkwMDYsIm5iZiI6MTc2OTYzODcwNiwicGF0aCI6Ii8yMDkwMDM3NjgvNTMwOTYyNjcyLTc5NDhiY2I5LWIxNWEtNDZiYS05YmFkLTFhNGQxNTU2YWQyNS5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYwMTI4JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MDEyOFQyMjE4MjZaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT03MWI3NDcyNDlhM2ZmMzRhMWViMWFiZTg1YmYxNDllYWI3MmQ4M2ZmYzBkOTQ4ODgzY2I4MzM2MjYwNDE2N2JjJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.aQ0HFcmrOXOGfAv9wBZ2YsK8VrANxqzdbXVj39khAUQ","project2Link":"","project2Github":"https://github.com/codedbygenius/feelter","project3Title":"Projects Dashboard","project3Description":"Built this website so i can store all my front-end projects ","project3Image":"https://private-user-images.githubusercontent.com/209003768/541919838-9ca00fef-bfe0-4c13-9170-25a4214aad99.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3Njk2NDIzMzMsIm5iZiI6MTc2OTY0MjAzMywicGF0aCI6Ii8yMDkwMDM3NjgvNTQxOTE5ODM4LTljYTAwZmVmLWJmZTAtNGMxMy05MTcwLTI1YTQyMTRhYWQ5OS5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYwMTI4JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MDEyOFQyMzEzNTNaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0zOTkyM2M2YTY2MDI0N2NjOWM2YWViMzk1MjlkMzAxNmNiMDc5MjZhZGNiYzM2OTQyZDNjNjYwZDdjZWY5NWI1JlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.xTZqHSVJtJ0r5H7BhhbeM5-E5Au3YxTSkZCCtXlMFGE","project3Link":"https://geniusprojects.netlify.app/","project3Github":"https://github.com/codedbygenius/projects-dashboard","project4Title":"Digital Album","project4Description":"A digital album for a 2 year old tolder , built this using some story telling","project4Image":"https://private-user-images.githubusercontent.com/209003768/541921213-ed951136-83cd-4c12-bc8e-424bd7f2b03c.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3Njk2NDI3MTMsIm5iZiI6MTc2OTY0MjQxMywicGF0aCI6Ii8yMDkwMDM3NjgvNTQxOTIxMjEzLWVkOTUxMTM2LTgzY2QtNGMxMi1iYzhlLTQyNGJkN2YyYjAzYy5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYwMTI4JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MDEyOFQyMzIwMTNaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT05OThjODI0NzQ0YmU0NzlhYmRjY2M0ZTc3NzMwYzQ3MWUwNjAxMmRjZjQyMTdhY2JiNTA5ZDI4OWRkNWFhZjI5JlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.91QKrKJwuAoNeM6t029h7WI_seSssnkJTY2lyHVaCCw","project4Link":"giaumsa.netlify.app","project4Github":"https://github.com/codedbygenius/gia-album","project5Title":"1st Portfolio","project5Description":"This is the first portfolio i built for myself using no-code tools","project5Image":"https://private-user-images.githubusercontent.com/209003768/541923229-fc5784c3-721c-46b0-a42a-db79368ce279.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3Njk2NDMwODUsIm5iZiI6MTc2OTY0Mjc4NSwicGF0aCI6Ii8yMDkwMDM3NjgvNTQxOTIzMjI5LWZjNTc4NGMzLTcyMWMtNDZiMC1hNDJhLWRiNzkzNjhjZTI3OS5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYwMTI4JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MDEyOFQyMzI2MjVaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0wNGIzOWE1MzdjNWFhNTZjNDg4ZmJjMmFiYWFhY2I3MWIyODJjNGNhZWI2YTBmNGU5YTRhN2Q0NzZhMjJiZjQ3JlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.mQL4hR1vzk7K8AWnVwLOVyZLpvWDv-bOI6rL13cZkw4","project5Link":"geniuschakurira-portfolio.netlify.app","project5Github":"https://github.com/codedbygenius/geniuschakurira-portfolio","project6Title":"","project6Description":"","project6Image":"","project6Link":"","project6Github":"","project7Title":"","project7Description":"","project7Image":"","project7Link":"","project7Github":"","project8Title":"","project8Description":"","project8Image":"","project8Link":"","project8Github":"","project9Title":"","project9Description":"","project9Image":"","project9Link":"","project9Github":"","project10Title":"","project10Description":"","project10Image":"","project10Link":"","project10Github":"","blog1Title":"My Journey Into AI & Automation","blog1Image":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRiiSvu4Iu_NaTO4V0_5I76_URY3t05rmHElQ&s","blog1Description":"Documenting my personal learning journey into AI and automation through hands-on projects and experiments. (Coming soon)","blog1Link":"https://github.com/codedbygenius","blog2Title":"Building a macOS Portfolio from Scratch","blog2Image":"https://preview.redd.it/recreated-macos-as-a-working-portfolio-interface-auto-v0-n4ezoxrm984g1.png?width=1080&crop=smart&auto=webp&s=9f95eddd81adcb56b2ed635aa6c8a17c5a36767d","blog2Description":"Planned breakdown of how I designed and built an interactive macOS-style developer portfolio. (Coming soon)","blog2Link":"https://github.com/codedbygenius","blog3Title":"Full-Stack Web Development Tips","blog3Image":"data:image/jpeg;base64,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","blog3Description":"Notes and lessons learned while building full-stack web applications as a self-learning developer. (Coming soon)","blog3Link":"https://github.com/codedbygenius","blog4Title":"","blog4Image":"","blog4Description":"","blog4Link":"","blog5Title":"","blog5Image":"","blog5Description":"","blog5Link":"","blog6Title":"","blog6Image":"","blog6Description":"","blog6Link":"","blog7Title":"","blog7Image":"","blog7Description":"","blog7Link":"","blog8Title":"","blog8Image":"","blog8Description":"","blog8Link":"","blog9Title":"","blog9Image":"","blog9Description":"","blog9Link":"","blog10Title":"","blog10Image":"","blog10Description":"","blog10Link":"","blog11Title":"","blog11Image":"","blog11Description":"","blog11Link":"","blog12Title":"","blog12Image":"","blog12Description":"","blog12Link":"","blog13Title":"","blog13Image":"","blog13Description":"","blog13Link":"","blog14Title":"","blog14Image":"","blog14Description":"","blog14Link":"","blog15Title":"","blog15Image":"","blog15Description":"","blog15Link":""};
+
+       
+        let currentTheme = 'light';
+        let currentProject = null;
+
+        // Initialize datetime
+        function updateDateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            };
+            document.getElementById('datetime').textContent = now.toLocaleDateString('en-US', options);
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        // Theme toggle
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.body.classList.toggle('dark-mode');
+            const circle = document.querySelector('.theme-toggle-circle');
+            circle.textContent = currentTheme === 'dark' ? '⚫' : '';
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Window management
+        function openWindow(windowId) {
+            const window = document.getElementById(windowId);
+
+            
+            if (window.classList.contains('active')) {
+                closeWindow(windowId);
+                return;
+            }
+
+            const allWindows = document.querySelectorAll('.window');
+            let highestZIndex = 100;
+
+            allWindows.forEach(win => {
+                const zIndex = parseInt(window.getAttribute('style')?.match(/z-index:\s*(\d+)/)?.[1] || 100);
+                if (zIndex > highestZIndex) {
+                    highestZIndex = zIndex;
+                }
+            });
+
+            window.style.zIndex = highestZIndex + 1;
+
+          
+            window.classList.add('active');
+            gsap.fromTo(window,
+                { scale: 0.8, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.7)" }
+            );
+        }
+
+        function closeWindow(windowId) {
+            const window = document.getElementById(windowId);
+
+            gsap.to(window, {
+                scale: 0.8,
+                opacity: 0,
+                duration: 0.2,
+                ease: "power2.in",
+                onComplete: () => {
+                    window.classList.remove('active');
+                }
+            });
+        }
+
+        // Finder section navigation
+        function showFinderSection(section) {
+            const items = document.querySelectorAll('.finder-sidebar-item');
+            items.forEach(item => item.classList.remove('active'));
+
+            const clickedItem = event.target.closest('.finder-sidebar-item');
+            if (clickedItem) {
+                clickedItem.classList.add('active');
+            }
+
+            const mainContent = document.getElementById('finder-main-content');
+
+            if (section === 'about') {
+                mainContent.innerHTML = `
+                    <div class="folder-contents">
+                        <div class="folder-item" onclick="openAboutText()">
+                            <div class="folder-item-icon">
+                            <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764307088/assets/vqf0c5qonxavegd1swk9.png"
+                                alt="Text File Icon" style="width: 100%; height: 100%;">    
+                            </div>
+                            <div class="folder-item-name">About.txt</div>
+                        </div>
+                    </div>
+                `;
+            } else if (section === 'projects') {
+                mainContent.innerHTML = '<div class="folder-contents" id="finder-projects-grid"></div>';
+                populateFinderProjects();
+            } else if (section === 'resume') {
+                mainContent.innerHTML = `
+                    <div class="folder-contents">
+                        <div class="folder-item" onclick="openWindow('resume-window')">
+                            <div class="folder-item-icon">
+                                <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764307663/assets/xyksyyiczfzqicvwhsdk.png"
+                                    alt="PDF Icon" style="width: 100%; height: 100%;">    
+                            </div>
+                            <div class="folder-item-name">Resume.pdf</div>
+                        </div>
+                    </div>
+                `;
+            } else if (section === 'gallery') {
+                mainContent.innerHTML = `
+                    <div class="folder-contents">
+                        <div class="folder-item" onclick="openGalleryPhoto()">
+                            <div class="folder-item-icon">
+                                <img src="${userData.profileImage}" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px;">
+                            </div>
+                            <div class="folder-item-name">Profile Photo</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function openAboutText() {
+            document.getElementById('about-text-content').textContent = userData.aboutText;
+            openWindow('about-text-window');
+        }
+
+        function openGalleryPhoto() {
+            const image = userData.profileImage;
+            const imageDisplay = document.getElementById('project-image-display');
+            const windowTitle = document.querySelector('#project-image-window .window-title');
+
+            imageDisplay.src = image;
+            imageDisplay.style.objectFit = 'contain';
+            imageDisplay.style.borderRadius = '12px';
+            windowTitle.textContent = 'Gallery';
+
+            openWindow('project-image-window');
+        }
+
+        function openProjectImage(projectIndex) {
+            const image = userData[`project${projectIndex}Image`];
+            const imageDisplay = document.getElementById('project-image-display');
+            const windowTitle = document.querySelector('#project-image-window .window-title');
+
+            imageDisplay.src = image;
+            imageDisplay.style.objectFit = 'contain';
+            imageDisplay.style.borderRadius = '12px';
+            windowTitle.textContent = 'Gallery';
+
+            openWindow('project-image-window');
+        }
+
+        function populateFinderProjects() {
+            const grid = document.getElementById('finder-projects-grid');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 10; i++) {
+                const title = userData[`project${i}Title`];
+                if (title) {
+                    grid.innerHTML += `
+                        <div class="folder-item" onclick="openProjectFolder(${i})">
+                            <div class="folder-item-icon">
+                                <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764304552/assets/ypntmuikpxtsx5zf245l.png"
+                                    alt="Folder Icon" style="width: 100%; height: 100%;">    
+                            </div>
+                            <div class="folder-item-name">${title}</div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Project folder management
+        function openProjectFolder(projectIndex) {
+            currentProject = projectIndex;
+            const title = userData[`project${projectIndex}Title`];
+            const description = userData[`project${projectIndex}Description`];
+            const image = userData[`project${projectIndex}Image`];
+            const link = userData[`project${projectIndex}Link`];
+            const github = userData[`project${projectIndex}Github`];
+
+            document.getElementById('project-folder-title').textContent = title;
+
+            const contents = document.getElementById('project-folder-contents');
+            contents.innerHTML = '';
+
+            if (image) {
+                contents.innerHTML += `
+                    <div class="folder-item flex flex-col items-center" onclick="openProjectImage(${projectIndex})">
+                        <div class="folder-item-icon">
+                            <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764324016/assets/kfs9dfjughleinc65mzk.png"
+                                alt="Image File Icon" style="width: 100%; height: 80%;">
+                        </div>
+                        <div class="folder-item-name">Project.png</div>
+                    </div>
+                `;
+            }
+
+            if (link) {
+                contents.innerHTML += `
+                    <div class="folder-item flex flex-col items-center" onclick="window.open('${link}', '_blank')">
+                        <div class="folder-item-icon">
+                            <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764307808/assets/btu2hk4q3uah30ekaklx.png"
+                                alt="Live Demo Icon" style="width: 100%; height: 75%;">
+                        </div>
+                        <div class="folder-item-name">Live Demo</div>
+                    </div>
+                `;
+            }
+
+            if (description) {
+                contents.innerHTML += `
+                    <div class="folder-item flex flex-col items-center justify-center" onclick="openProjectReadme(${projectIndex})">
+                        <div class="folder-item-icon">
+                        <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764307088/assets/vqf0c5qonxavegd1swk9.png"
+                            alt="Text File Icon" style="width: 100%; height: 80%;">    
+                        </div>
+                        <div class="folder-item-name">README.txt</div>
+                    </div>
+                `;
+            }
+
+            if (github) {
+                contents.innerHTML += `
+                    <div class="folder-item flex flex-col items-center" onclick="window.open('${github}', '_blank')">
+                        <div class="folder-item-icon">
+                            <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" 
+                                 style="width: 97%; height: 65%; border-radius: 10%;">
+                        </div>
+                        <div class="folder-item-name">Source Code</div>
+                    </div>
+                `;
+            }
+
+            openWindow('project-folder-window');
+        }
+
+        function openProjectReadme(projectIndex) {
+            const description = userData[`project${projectIndex}Description`];
+            document.getElementById('project-readme-content').textContent = description;
+            openWindow('project-readme-window');
+        }
+
+        // Resume download function
+        async function downloadResume() {
+            if (!userData.resumeURL) {
+                alert('No resume available');
+                return;
+            }
+
+            try {
+                const response = await fetch(userData.resumeURL);
+                const blob = await response.blob();
+                const pdfBlob = new Blob([blob], { type: "application/pdf" });
+                const url = window.URL.createObjectURL(pdfBlob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${userData.username || "resume"}_Resume.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error("Error downloading PDF:", error);
+                alert('Failed to download resume. Please try again.');
+            }
+        }
+
+        // Populate desktop with project folders
+        function populateDesktopIcons() {
+            const container = document.getElementById('desktop-icons');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= 10; i++) {
+                const title = userData[`project${i}Title`];
+                if (title) {
+                    container.innerHTML += `
+                        <div class="desktop-folder" onclick="openProjectFolder(${i})">
+                            <div class="desktop-folder-icon">
+                                <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764304552/assets/ypntmuikpxtsx5zf245l.png"
+                                    alt="Folder Icon" style="width: 100%; height: 100%;">    
+                            </div>
+                            <div class="desktop-folder-name">${title}</div>
+                        </div>
+                    `;
+                }
+            }
+
+            container.innerHTML += `
+            <div class="desktop-folder" onClick="openAboutText()">
+                <div class="desktop-folder-icon">
+                    <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764307088/assets/vqf0c5qonxavegd1swk9.png"
+                        alt="Text File Icon" style="width: 100%; height: 100%;">    
+                </div>
+                <div class="desktop-folder-name">About.txt</div>
+            </div>
+            `;
+
+            container.innerHTML += `
+            <div class="desktop-folder" onClick="openWindow('resume-window')">
+                <div class="desktop-folder-icon">
+                    <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764307663/assets/xyksyyiczfzqicvwhsdk.png"
+                        alt="PDF File Icon" style="width: 95%; height: 95%;">
+                </div>
+                <div class="desktop-folder-name">Resume.pdf</div>
+            </div>
+            `;
+        }
+
+        // Populate dock (conditionally)
+        function populateDock() {
+            const dock = document.getElementById('dock');
+            dock.innerHTML = '';
+
+            // Portfolio (always show)
+            dock.innerHTML += `
+                <div class="dock-item" onclick="openWindow('portfolio-window')">
+                    <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764243186/assets/krbszoikqk7dyolvkif5.png"
+                        alt="Portfolio" style="width: 100%; height: 100%;">
+                    <div class="dock-tooltip">Portfolio</div>
+                </div>
+            `;
+
+            // Experience (if has data)
+            if (userData.experience1Company) {
+                dock.innerHTML += `
+                    <div class="dock-item" onclick="openWindow('experience-window')">
+                        <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764395749/assets/t1djqp68jlr9v5jdhid0.png"
+                            alt="Experience" style="width: 100%; height: 100%;">
+                        <div class="dock-tooltip">Experience</div>
+                    </div>
+                `;
+            }
+
+            // Skills (if has data)
+            if (userData.skill1Title) {
+                dock.innerHTML += `
+                    <div class="dock-item" onclick="openWindow('skills-window')">
+                        <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764244534/assets/rryk3mwpuz8addj9vzqs.png"
+                            alt="Skills" style="width: 100%; height: 100%;">
+                        <div class="dock-tooltip">Skills</div>
+                    </div>
+                `;
+            }
+
+            // Education (if has data)
+            if (userData.education1Institution) {
+                dock.innerHTML += `
+                    <div class="dock-item" onclick="openWindow('education-window')">
+                        <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764311057/assets/beq38h7jt5gyz1frjghx.png"
+                            alt="Education" style="width: 100%; height: 100%;">
+                        <div class="dock-tooltip">Education</div>
+                    </div>
+                `;
+            }
+
+            // Achievements (if has data)
+            if (userData.achievement1Title) {
+                dock.innerHTML += `
+                    <div class="dock-item" onclick="openWindow('achievements-window')">
+                        <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764311378/assets/npje96k9pb5x6cz2vv7f.png"
+                            alt="Achievements" style="width: 100%; height: 100%;">
+                        <div class="dock-tooltip">Achievements</div>
+                    </div>
+                `;
+            }
+
+            // Blogs (if has data)
+            if (userData.blog1Title) {
+                dock.innerHTML += `
+                    <div class="dock-item" onclick="openWindow('blog-window')">
+                        <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764307808/assets/btu2hk4q3uah30ekaklx.png"
+                            alt="Blogs" style="width: 88%; height: 88%;">
+                        <div class="dock-tooltip">Blogs & Articles</div>
+                    </div>
+                `;
+            }
+
+            // Contact (if has data)
+            if (userData.contactEmail || userData.github || userData.linkedin || userData.twitter) {
+                dock.innerHTML += `
+                    <div class="dock-item" onclick="openWindow('contact-window')">
+                        <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764244682/assets/onp5lnf0t91kwzoqkhw0.png"
+                            alt="Contact" style="width: 80%; height: 80%;">
+                        <div class="dock-tooltip">Contact</div>
+                    </div>
+                `;
+            }
+        }
+
+       
+        function populateExperience() {
+            const container = document.getElementById('experience-content');
+            if (!container) return;
+
+            let experiences = [];
+            for (let i = 1; i <= 10; i++) {
+                if (userData[`experience${i}Company`]) {
+                    experiences.push({
+                        index: i,
+                        company: userData[`experience${i}Company`],
+                        role: userData[`experience${i}Role`] || '',
+                        duration: userData[`experience${i}Duration`] || '',
+                        description: userData[`experience${i}Description`] || ''
+                    });
+                }
+            }
+
+            if (experiences.length === 0) return;
+
+            let html = `
+        <div class="reminders-sidebar">
+            <div class="reminders-list-item active" onclick="filterExperience('all')">
+                <div class="" >
+                    <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764395749/assets/t1djqp68jlr9v5jdhid0.png"
+                        alt="Experience Icon" style="width: 30px; height: 30px;">
+                </div>
+                <span>All</span>
+            </div>
+    `;
+
+        
+            experiences.forEach((exp, idx) => {
+                html += `
+            <div class="reminders-list-item" onclick="filterExperience(${exp.index})">
+                <div class="reminders-list-icon" style="background: rgba(102, 126, 234, 0.2); color: #667eea;">
+                    ${idx + 1}
+                </div>
+                <span class="line-clamp-1">${exp.company}</span>
+            </div>
+        `;
+            });
+
+            html += `
+        </div>
+        <div class="reminders-main">
+            <div class="reminders-header">
+                <div class="reminders-title">Work Experience</div>
+                <div class="reminders-count" id="exp-count">${experiences.length} position${experiences.length > 1 ? 's' : ''}</div>
+            </div>
+            <div class="reminder-group">
+                <div class="reminder-group-title">Career Timeline</div>
+                <div id="experience-list">
+    `;
+
+            experiences.forEach(exp => {
+                html += `
+            <div class="reminder-item" data-exp-id="${exp.index}">
+                <div class="reminder-item-header">
+                    <div class="reminder-checkbox"></div>
+                    <div class="reminder-item-content">
+                        <div class="reminder-item-title">${exp.company}</div>
+                        <div class="reminder-item-subtitle">${exp.role}</div>
+                        <div class="reminder-item-description">${exp.description}</div>
+                        <div class="reminder-item-date">
+                            <i data-lucide="calendar" style="width: 14px; height: 14px;"></i>
+                            ${exp.duration}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+            });
+
+            html += `
+                </div>
+            </div>
+        </div>
+    `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+
+        // Populate Education 
+        function populateEducation() {
+            const container = document.getElementById('education-content');
+            if (!container) return;
+
+            let educationCount = 0;
+            for (let i = 1; i <= 10; i++) {
+                if (userData[`education${i}Institution`]) educationCount++;
+            }
+
+            if (educationCount === 0) return;
+
+            let html = `
+                <div class="reminders-sidebar">
+                    <div class="reminders-list-item active">
+                        <div class="" >
+                            <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764311057/assets/beq38h7jt5gyz1frjghx.png"
+                                alt="Education Icon" style="width: 20px; height: 20px;">
+                        </div>
+                        <span>All</span>
+                    </div>
+                </div>
+                <div class="reminders-main">
+                    <div class="reminders-header">
+                        <div class="reminders-title">Education</div>
+                        <div class="reminders-count">${educationCount} institution${educationCount > 1 ? 's' : ''}</div>
+                    </div>
+                    <div class="reminder-group">
+                        <div class="reminder-group-title">Academic Journey</div>
+            `;
+
+            for (let i = 1; i <= 10; i++) {
+                const institution = userData[`education${i}Institution`];
+                if (institution) {
+                    const degree = userData[`education${i}Degree`] || '';
+                    const duration = userData[`education${i}Duration`] || '';
+                    const grades = userData[`education${i}Grades`] || '';
+
+                    html += `
+                        <div class="reminder-item">
+                            <div class="reminder-item-header">
+                                <div class="reminder-checkbox"></div>
+                                <div class="reminder-item-content">
+                                    <div class="reminder-item-title">${institution}</div>
+                                    <div class="reminder-item-subtitle">${degree}</div>
+                                    ${grades ? `<div class="reminder-item-description">Grade: ${grades}</div>` : ''}
+                                    <div class="reminder-item-date">
+                                        <i data-lucide="calendar" style="width: 14px; height: 14px;"></i>
+                                        ${duration}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // Populate Achievements
+        function populateAchievements() {
+            const container = document.getElementById('achievements-content');
+            if (!container) return;
+
+            let achievements = [];
+            for (let i = 1; i <= 10; i++) {
+                if (userData[`achievement${i}Title`]) {
+                    achievements.push({
+                        index: i,
+                        title: userData[`achievement${i}Title`],
+                        date: userData[`achievement${i}Date`] || '',
+                        description: userData[`achievement${i}Description`] || '',
+                        image: userData[`achievement${i}Image`] || ''
+                    });
+                }
+            }
+
+            if (achievements.length === 0) return;
+
+            let html = `
+        <div class="reminders-sidebar">
+            <div class="reminders-list-item active" onclick="filterAchievement('all')">
+                <div class="" >
+                    <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764311378/assets/npje96k9pb5x6cz2vv7f.png"
+                        alt="Achievements Icon" style="width: 30px; height: 30px;">
+                </div>
+                <span>All</span>
+            </div>
+    `;
+
+         
+            achievements.forEach((ach, idx) => {
+                html += `
+            <div class="reminders-list-item" onclick="filterAchievement(${ach.index})">
+                <div class="reminders-list-icon" style="background: rgba(25, 167, 81, 0.2); color: green;">
+                    ${idx + 1}
+                </div>
+                <span class="line-clamp-2">${ach.title}</span>
+            </div>
+        `;
+            });
+
+            html += `
+        </div>
+        <div class="reminders-main">
+            <div class="reminders-header">
+                <div class="reminders-title">Achievements</div>
+                <div class="reminders-count" id="ach-count">${achievements.length} milestone${achievements.length > 1 ? 's' : ''}</div>
+            </div>
+            <div class="reminder-group">
+                <div class="reminder-group-title">Milestones & Awards</div>
+                <div id="achievement-list">
+    `;
+
+            achievements.forEach(ach => {
+                html += `
+            <div class="reminder-item" data-ach-id="${ach.index}">
+                <div class="reminder-item-header">
+                    <div class="reminder-checkbox"></div>
+                    <div class="reminder-item-content">
+                        <div class="reminder-item-title">${ach.title}</div>
+                        <div class="reminder-item-description">${ach.description}</div>
+                        <div class="reminder-item-date">
+                            <i data-lucide="calendar" style="width: 14px; height: 14px;"></i>
+                            ${ach.date}
+                        </div>
+                        ${ach.image ? `
+                            <div class="reminder-item-image">
+                                <img src="${ach.image}" alt="${ach.title}">
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+            });
+
+            html += `
+                </div>
+            </div>
+        </div>
+    `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // Populate all data
+        function populateData() {
+            const desktop = document.getElementById('desktop');
+            const defaultBg = 'https://res.cloudinary.com/dpazarvil/image/upload/v1764397361/assets/lhzly6rf6bagahnliczk.png';
+            const bgImage = userData.backgroundImage || defaultBg;
+            desktop.style.background = `url('${bgImage}') center/cover no-repeat fixed`;
+
+            document.getElementById('portfolio-name').textContent = userData.username;
+            document.getElementById('port-title').textContent = `${userData.username}'s Portfolio` || 'Macos Portfolio';
+
+            // Resume
+            if (userData.resumeURL) {
+                const encodedURL = encodeURIComponent(userData.resumeURL);
+                document.getElementById('resume-iframe').src = `https://docs.google.com/viewer?url=${encodedURL}&embedded=true`;
+            }
+
+           
+            populateExperience();
+            populateEducation();
+            populateAchievements();
+
+            // Skills
+            const skillsContent = document.getElementById('skills-content');
+            let terminalUser = userData.username || 'user';
+            let terminalHTML = `<span class="terminal-prompt">${terminalUser}@portfolio</span><span class="terminal-path">:~$</span> <span class="terminal-command">./check_skills.sh</span>\n\n`;
+
+
+            terminalHTML += '<span class="terminal-separator">---------------------------------------------------------</span>\n\n';
+
+            let skillCount = 0;
+            for (let i = 1; i <= 20; i++) {
+                const skill = userData[`skill${i}Title`];
+                if (skill) {
+                    skillCount++;
+                    const percentage = 85 + Math.floor(Math.random() * 15);
+                    const barLength = Math.floor(percentage / 5);
+                    const bar = '█'.repeat(barLength) + '░'.repeat(20 - barLength);
+
+                    terminalHTML += `<span class="terminal-output">✓ ${skill.padEnd(20)} </span><span class="skill-bar">[${bar}]</span> <span class="terminal-success">${percentage}%</span>\n`;
+                }
+            }
+
+            if (skillCount > 0) {
+                terminalHTML += '\n<span class="terminal-separator">---------------------------------------------------------</span>\n\n';
+                terminalHTML += '<span class="terminal-info">Running comprehensive analysis...</span>\n';
+                terminalHTML += '<span class="terminal-output">   [████████████████████] 100%</span>\n\n';
+                terminalHTML += '<span class="terminal-success">✓ All systems operational</span>\n';
+                terminalHTML += `<span class="terminal-success">✓ ${skillCount} technologies mastered</span>\n`;
+                terminalHTML += '<span class="terminal-success">✓ Performance metrics: OPTIMAL</span>\n';
+                terminalHTML += '<span class="terminal-success">✓ Code quality: PRISTINE</span>\n\n';
+                // terminalHTML += '<span class="terminal-separator">---------------------------------------------------------------------------</span>\n\n';
+                terminalHTML += `<span class="terminal-prompt">${terminalUser}@portfolio</span><span class="terminal-path">:~$</span> <span class="terminal-blink">█</span>`;
+            } else {
+                terminalHTML += '<span style="color: #888;">No skills data available</span>\n';
+                terminalHTML += `<span class="terminal-prompt">${terminalUser}@portfolio</span><span class="terminal-path">:~$</span> <span class="terminal-blink">█</span>`;
+            }
+
+            skillsContent.innerHTML = terminalHTML;
+
+            // Blogs
+            const blogContent = document.getElementById('blog-content');
+            blogContent.innerHTML = '';
+            for (let i = 1; i <= 20; i++) {
+                const title = userData[`blog${i}Title`];
+                if (title) {
+                    const image = userData[`blog${i}Image`] || '';
+                    const description = userData[`blog${i}Description`] || '';
+                    const link = userData[`blog${i}Link`] || '#';
+                    blogContent.innerHTML += `
+                        <div class="blog-card" onclick="window.open('${link}', '_blank')">
+                            <img src="${image}" class="blog-image" alt="${title}">
+                            <div class="blog-content">
+                                <div class="blog-title">${title}</div>
+                                <div class="blog-description">${description}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // Contact
+            const contactContent = document.getElementById('contact-content');
+            contactContent.innerHTML = '';
+            if (userData.profileImage) {
+                contactContent.innerHTML += `
+                    <div class="contact-profile-image ml-4">
+                        <img src="${userData.profileImage}" alt="Profile Image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 100%;">
+                        <p class="mt-2 text-lg font-semibold">${userData.username || "User"} - ${userData.profession || "Developer"} </p>
+                        <p class="text-sm mt-2 text-gray-500"> Got an idea? Want to collaborate? Feel free to reach out through any of the platforms below. I'm always excited to connect with like-minded individuals and explore new opportunities together!</p>
+                    </div>
+                `;
+            }
+
+            let newParentDiv = document.createElement('div');
+            newParentDiv.className = 'contact-links-grid flex flex-row flex-wrap justify-start mt-4 gap-4';
+            contactContent.appendChild(newParentDiv);
+            if (userData.contactEmail) {
+                newParentDiv.innerHTML += `
+                    <a href="mailto:${userData.contactEmail}" class="contact-link">
+                        <span class="contact-link-icon">
+                            <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764330101/assets/f0gc5erbhidoubofzbyo.png"
+                                alt="Email Icon" style="width: 66px; height: 66px; ">
+                        </span>
+                    </a>
+                `;
+            }
+            if (userData.github) {
+                newParentDiv.innerHTML += `
+                    <a href="${userData.github}" target="_blank" class="contact-link">
+                        <span class="contact-link-icon">
+                            <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764330742/assets/iaekhg3jkawyn8jtwgyt.png" 
+                                 style="width: 66px; height: 66px; ">
+                        </span>
+                    </a>
+                `;
+            }
+            if (userData.linkedin) {
+                newParentDiv.innerHTML += `
+                    <a href="${userData.linkedin}" target="_blank" class="contact-link">
+                        <span class="contact-link-icon">
+                        <img class="rounded-xl overflow-hidden" src="https://res.cloudinary.com/dpazarvil/image/upload/v1764330924/assets/givape90pu9uqpkxvd2q.png"
+                            alt="LinkedIn Icon" style="width: 60px; height: 60px; border-radius: 12px;">    
+                        </span>
+                    </a>
+                `;
+            }
+            if (userData.twitter) {
+                newParentDiv.innerHTML += `
+                    <a href="${userData.twitter}" target="_blank" class="contact-link">
+                        <span class="contact-link-icon">
+                           <img src="https://res.cloudinary.com/dpazarvil/image/upload/v1764331007/assets/rxruhsxolb6nilrcpkbp.png"
+                                alt="Twitter Icon" style="width: 66px; height: 66px; ">    
+                        </span>
+                    </a>
+                `;
+            }
+
+            populateDesktopIcons();
+            populateDock();
+            showFinderSection('about');
+        }
+
+        // Filter Experience by index
+        function filterExperience(filter) {
+            const items = document.querySelectorAll('#experience-list .reminder-item');
+            const sidebarItems = document.querySelectorAll('#experience-window .reminders-list-item');
+            const countElement = document.getElementById('exp-count');
+
+            // Update sidebar active state
+            sidebarItems.forEach(item => item.classList.remove('active'));
+            event.target.closest('.reminders-list-item').classList.add('active');
+
+            if (filter === 'all') {
+                let visibleCount = 0;
+                items.forEach(item => {
+                    item.style.display = 'block';
+                    visibleCount++;
+                });
+                countElement.textContent = `${visibleCount} position${visibleCount > 1 ? 's' : ''}`;
+            } else {
+                let visibleCount = 0;
+                items.forEach(item => {
+                    if (item.getAttribute('data-exp-id') == filter) {
+                        item.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                countElement.textContent = `${visibleCount} position${visibleCount > 1 ? 's' : ''}`;
+            }
+        }
+
+        // Filter Achievement by index
+        function filterAchievement(filter) {
+            const items = document.querySelectorAll('#achievement-list .reminder-item');
+            const sidebarItems = document.querySelectorAll('#achievements-window .reminders-list-item');
+            const countElement = document.getElementById('ach-count');
+
+            
+            sidebarItems.forEach(item => item.classList.remove('active'));
+            event.target.closest('.reminders-list-item').classList.add('active');
+
+            if (filter === 'all') {
+                let visibleCount = 0;
+                items.forEach(item => {
+                    item.style.display = 'block';
+                    visibleCount++;
+                });
+                countElement.textContent = `${visibleCount} milestone${visibleCount > 1 ? 's' : ''}`;
+            } else {
+                let visibleCount = 0;
+                items.forEach(item => {
+                    if (item.getAttribute('data-ach-id') == filter) {
+                        item.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                countElement.textContent = `${visibleCount} milestone${visibleCount > 1 ? 's' : ''}`;
+            }
+        }
+        // Make windows draggable
+        setTimeout(() => {
+            const windows = document.querySelectorAll('.window');
+            windows.forEach(window => {
+                const header = window.querySelector('.window-header');
+                Draggable.create(window, {
+                    trigger: header,
+                    bounds: ".desktop",
+                    type: "x,y"
+                });
+            });
+        }, 100);
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            populateData();
+
+            setTimeout(() => {
+                gsap.fromTo('.dock-item',
+                    { y: 100, opacity: 0 },
+                    { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "back.out(1.7)" }
+                );
+            }, 100);
+        });
+
+        
+        function addGreeting() {
+            const desktop = document.getElementById('desktop');
+
+            
+            const greeting = document.createElement('div');
+            greeting.id = 'desktop-greeting';
+            greeting.textContent = `Hello, I'm ${userData.username}`;
+            greeting.style.position = 'absolute';
+            greeting.style.width = 'auto';
+            greeting.style.maxWidth = '90%';
+            greeting.style.top = '50%';
+            greeting.style.left = '50%';
+            greeting.style.transform = 'translate(-50%, -50%)';
+            greeting.style.fontSize = '3.5rem';
+            greeting.style.fontWeight = '500';
+            greeting.style.textAlign = 'center';
+            greeting.style.fontFamily = '"Playwrite NO", cursive';
+            greeting.style.color = 'white';
+            greeting.style.textShadow = '0 4px 8px rgba(0, 0, 0, 0.4)';
+            greeting.style.zIndex = '1';
+            greeting.style.opacity = '0';
+            greeting.style.cursor = 'pointer';
+            greeting.style.transition = 'transform 0.3s ease, text-shadow 0.3s ease';
+
+            desktop.appendChild(greeting);
+
+            
+            const originalText = greeting.textContent;
+            let currentMode = null;
+            let timeline = null;
+            let isComplete = true;
+
+            function updateWhiteSpace() {
+                if (window.innerWidth >= 1024) {
+                    greeting.style.whiteSpace = 'nowrap';
+                } else {
+                    greeting.style.whiteSpace = 'normal';
+                }
+            }
+
+            gsap.fromTo(
+                greeting,
+                { y: -50, opacity: 0 },
+                {
+                    y: 0,
+                    opacity: 1,
+                    duration: 1.5,
+                    ease: 'power4.out',
+                    delay: 0.5,
+                    onComplete: () => {
+                        updateAnimationMode();
+                    }
+                }
+            );
+
+            gsap.to(greeting, {
+                textShadow: '0 6px 12px rgba(0, 0, 0, 0.5)',
+                duration: 1,
+                repeat: -1,
+                yoyo: true,
+                ease: 'sine.inOut',
+            });
+
+            function initializeSplitText() {
+                greeting.innerHTML = ''; 
+
+                const chars = originalText.split('').map(char => {
+                    const span = document.createElement('span');
+                    span.textContent = char;
+                    span.style.display = 'inline-block';
+                    span.style.position = 'relative';
+                    if (char === ' ') {
+                        span.style.width = '0.3em';
+                    }
+                    greeting.appendChild(span);
+                    return span;
+                });
+
+                timeline = gsap.timeline({
+                    paused: true,
+                    onComplete: () => isComplete = true,
+                });
+
+                timeline.fromTo(
+                    chars,
+                    { y: 0 },
+                    {
+                        duration: 0.3,
+                        y: -15,
+                        stagger: 0.02,
+                        ease: 'back.out(1.7)'
+                    }
+                );
+
+                timeline.to(
+                    chars,
+                    {
+                        duration: 0.3,
+                        y: 0,
+                        stagger: 0.02,
+                        ease: 'back.in(1.7)'
+                    }
+                );
+            }
+
+            function handleSplitTextHover() {
+                if (!isComplete) return;
+                isComplete = false;
+                timeline.restart();
+            }
+
+            function handleNormalHover() {
+                greeting.style.transform = 'translate(-50%, -50%) scale(1.05)';
+                greeting.style.textShadow = '0 8px 16px rgba(255, 255, 255, 0.6)';
+            }
+
+            function handleNormalHoverOut() {
+                greeting.style.transform = 'translate(-50%, -50%) scale(1)';
+                greeting.style.textShadow = '0 4px 8px rgba(0, 0, 0, 0.4)';
+            }
+
+            function removeAllEventListeners() {
+                const newGreeting = greeting.cloneNode(true);
+                greeting.parentNode.replaceChild(newGreeting, greeting);
+                return newGreeting;
+            }
+
+            function updateAnimationMode() {
+                const isLargeScreen = window.innerWidth >= 1024;
+                const newMode = isLargeScreen ? 'split' : 'normal';
+
+                if (currentMode === newMode) return;
+
+                currentMode = newMode;
+
+                const greetingEl = document.getElementById('desktop-greeting');
+
+                if (timeline) {
+                    timeline.kill();
+                    timeline = null;
+                }
+
+                if (isLargeScreen) {
+                    initializeSplitText();
+                    greetingEl.addEventListener('mouseenter', handleSplitTextHover);
+                    greetingEl.addEventListener('mouseleave', handleSplitTextHover);
+                } else {
+                    greetingEl.innerHTML = originalText;
+                    greetingEl.addEventListener('mouseover', handleNormalHover);
+                    greetingEl.addEventListener('mouseout', handleNormalHoverOut);
+                }
+
+                updateWhiteSpace();
+            }
+
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    updateAnimationMode();
+                }, 100);
+            });
+
+            updateWhiteSpace();
+        }
+        addGreeting();
+    </script>
+</body>
+
+</html>
